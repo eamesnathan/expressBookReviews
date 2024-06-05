@@ -71,6 +71,45 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     }
 });
 
+// Delete a book review
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    try {
+        console.log("DELETE /auth/review/:isbn called");
+        const isbn = req.params.isbn;
+        console.log("ISBN:", isbn);
+        const username = req.session.username;
+        console.log("Username from session:", username);
+
+        if (!isbn) {
+            console.log("ISBN missing");
+            return res.status(400).json({ message: "ISBN is required" });
+        }
+
+        if (!username) {
+            console.log("Username not found in session");
+            return res.status(401).json({ message: "You must be logged in to delete a review" });
+        }
+
+        let book = Object.values(books).find(book => book.isbn === isbn);
+        if (!book) {
+            console.log("Book not found");
+            return res.status(404).json({ message: "Book not found" });
+        }
+
+        if (book.reviews && book.reviews[username]) {
+            delete book.reviews[username];
+            console.log("Review deleted successfully");
+            return res.status(200).json({ message: "Review deleted successfully", reviews: book.reviews });
+        } else {
+            console.log("Review by user not found");
+            return res.status(404).json({ message: "Review by user not found" });
+        }
+    } catch (error) {
+        console.error("Error processing request:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
